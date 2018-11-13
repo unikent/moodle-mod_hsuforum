@@ -8906,3 +8906,4 @@ function mod_hsuforum_get_completion_active_rule_descriptions($cm) {
     }
     return $descriptions;
 }
+/* Ignore - delete */
