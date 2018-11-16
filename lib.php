@@ -18,7 +18,7 @@
  * @package   mod_hsuforum
  * @copyright 1999 onwards Martin Dougiamas  {@link http://moodle.com}
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @copyright Copyright (c) 2012 Moodlerooms Inc. (http://www.moodlerooms.com)
+ * @copyright Copyright (c) 2012 Blackboard Inc. (http://www.blackboard.com)
  * @author Mark Nielsen
  */
 
@@ -1616,7 +1616,7 @@ function hsuforum_print_recent_activity($course, $viewfullnames, $timestart) {
  * @return array $posts
  */
 
-function hsuforum_recent_activity_query($course, $timestart, $forumid = null) {
+function hsuforum_recent_activity_query($course, $timestart, $forumid = null, $orderasc = true) {
     global $USER, $DB;
 
     $limitfrom = 0;
@@ -1626,6 +1626,7 @@ function hsuforum_recent_activity_query($course, $timestart, $forumid = null) {
         $andforumid = 'AND d.forum = ?';
         $limitnum = 6;
     }
+    $orderquery = $orderasc ? 'ASC' : 'DESC';
     $allnamefields = user_picture::fields('u', null, 'duserid');
     $sql = "SELECT p.*, f.anonymous as forumanonymous, f.type AS forumtype,
                    d.forum, d.groupid, d.timestart, d.timeend, $allnamefields
@@ -1638,7 +1639,7 @@ function hsuforum_recent_activity_query($course, $timestart, $forumid = null) {
                    AND p.deleted <> 1
                    AND (p.privatereply = 0 OR p.privatereply = ? OR p.userid = ?)
                    $andforumid
-          ORDER BY p.created ASC
+          ORDER BY p.created $orderquery
     ";
 
     $params = array($timestart, $course->id, $USER->id, $USER->id, $forumid);
@@ -1664,10 +1665,10 @@ function hsuforum_recent_activity_query($course, $timestart, $forumid = null) {
  * @param int $timestart
  * @return string recent activity
  */
-function hsuforum_recent_activity($course, $viewfullnames, $timestart, $forumid = null) {
+function hsuforum_recent_activity($course, $viewfullnames, $timestart, $forumid = null, $orderasc = true) {
     global $CFG, $USER, $DB, $OUTPUT;
 
-    $posts = hsuforum_recent_activity_query($course, $timestart, $forumid = null);
+    $posts = hsuforum_recent_activity_query($course, $timestart, $forumid, $orderasc);
 
     $modinfo = get_fast_modinfo($course);
     $config = get_config('hsuforum');
@@ -7412,7 +7413,7 @@ function hsuforum_cm_info_view(cm_info $cm) {
     $out = '';
 
     if (empty($config->hiderecentposts) && $forum->showrecent) {
-        $out .= hsuforum_recent_activity($cm->get_course(), true, 0, $forum->id);
+        $out .= hsuforum_recent_activity($cm->get_course(), true, 0, $forum->id, false);
     }
 
     if ($unread = hsuforum_count_forum_unread_posts($cm, $cm->get_course())) {
