@@ -304,7 +304,7 @@ $string['modeflatnewestfirst'] = 'Display replies flat, with newest first';
 $string['modeflatoldestfirst'] = 'Display replies flat, with oldest first';
 $string['modenested'] = 'Display replies in nested form';
 $string['modethreaded'] = 'Display replies in threaded form';
-$string['modulename'] = 'Open Forum';
+$string['modulename'] = 'Forum Plus';
 $string['modulename_help'] = 'The Open Forum activity module enables participants to have asynchronous discussions,
 i.e., discussions that take place over an extended period of time.
 
