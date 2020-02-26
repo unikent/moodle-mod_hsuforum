@@ -25,6 +25,7 @@
  */
 
 $string['activityoverview'] = 'There are new forum posts';
+$string['addanewdiscussion'] = 'Add a new discussion topic';
 $string['addanewtopic'] = 'Add a new discussion';
 $string['advancedsearch'] = 'Advanced search';
 $string['allforums'] = 'All forums';
@@ -50,6 +51,7 @@ $string['bynameondate'] = 'by {$a->name} - {$a->date}';
 $string['cannotadd'] = 'Could not add the discussion for this forum';
 $string['cannotadddiscussion'] = 'Adding discussions to this forum requires group membership.';
 $string['cannotadddiscussionall'] = 'You do not have permission to add a new discussion topic for all participants.';
+$string['cannotadddiscussiongroup'] = 'You are not able to create a discussion because you are not a member of any group.';
 $string['cannotaddsubscriber'] = 'Could not add subscriber with id {$a} to this forum!';
 $string['cannotaddteacherforumto'] = 'Could not add converted teacher forum instance to section 0 in the course';
 $string['cannotcreatediscussion'] = 'Could not create new discussion';
@@ -134,6 +136,7 @@ $string['discussionname'] = 'Discussion name';
 $string['discussionpin'] = 'Pin';
 $string['discussionpinned'] = 'Pinned';
 $string['discussionpinned_help'] = 'Pinned discussions will appear at the top of a forum.';
+$string['discussionsplit'] = 'Discussion has been split';
 $string['discussions'] = 'Discussions';
 $string['discussionsstartedby'] = 'Discussions started by {$a}';
 $string['discussionsstartedbyrecent'] = 'Discussions recently started by {$a}';
@@ -181,6 +184,8 @@ $string['emaildigesttype_help'] = 'The type of notification that you will receiv
 * Digest - complete posts - you will receive one digest e-mail per day containing the complete contents of each forum post;
 * Digest - subjects only - you will receive one digest e-mail per day containing just the subject of each forum post.
 ';
+$string['emaildigestupdated'] = 'Email digest updated';
+$string['emaildigestupdated_default'] = 'Email digest updated default';
 $string['emptymessage'] = 'Something was wrong with your post. Perhaps you left it blank or the attachment was too big. Your changes have NOT been saved.';
 $string['erroremptymessage'] = 'Post message cannot be empty';
 $string['erroremptysubject'] = 'Post subject cannot be empty.';
@@ -196,6 +201,7 @@ $string['existingsubscribers'] = 'Existing subscribers';
 $string['exportdiscussion'] = 'Export whole discussion to portfolio';
 $string['forcessubscribe'] = 'This forum forces everyone to be subscribed';
 $string['forum'] = 'Forum';
+$string['gradingmethodpreview'] = 'Grading criteria';
 $string['hsuforum:addinstance'] = 'Add a new forum';
 $string['hsuforum:allowforcesubscribe'] = 'Allow force subscribe';
 $string['forumauthorhidden'] = 'Author (hidden)';
@@ -361,8 +367,8 @@ $string['notinstalled'] = 'The forum module is not installed';
 $string['notpartofdiscussion'] = 'This post is not part of a discussion!';
 $string['notrackforum'] = 'Don\'t track unread posts';
 $string['noviewdiscussionspermission'] = 'You do not have the permission to view discussions in this forum';
-$string['nowallsubscribed'] = 'All forums in {$a} are subscribed.';
-$string['nowallunsubscribed'] = 'All forums in {$a} are not subscribed.';
+$string['nowallsubscribed'] = 'You are now subscribed to all forums in {$a}.';
+$string['nowallunsubscribed'] = 'You are now unsubscribed from all forums in {$a}.';
 $string['nownotsubscribed'] = '{$a->name} will NOT be notified of new posts in \'{$a->forum}\'';
 $string['nownottracking'] = '{$a->name} is no longer tracking \'{$a->forum}\'.';
 $string['nowsubscribed'] = '{$a->name} will be notified of new posts in \'{$a->forum}\'';
@@ -469,7 +475,7 @@ $string['privacy:metadata:preference:markasreadonnotification'] = 'Whether to ma
 $string['privacy:metadata:preference:trackforums'] = 'Whether to enable read tracking.';
 
 $string['privacy:subscribedtoforum'] = 'You are subscribed to this forum.';
-$string['privacy:readtrackingdisabled'] = 'You have chosen to not track which posts that you have read within this forum.';
+$string['privacy:readtrackingdisabled'] = 'You have chosen to not track posts you have read within this forum.';
 $string['privacy:postwasread'] = 'This post was first read on {$a->firstread} and most recently read on {$a->lastread}';
 
 $string['privacy:request:delete:post:message'] = 'The content of this post has been deleted at the request of its author.';

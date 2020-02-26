@@ -31,6 +31,8 @@ use mod_hsuforum\renderables\advanced_editor;
 
 require_once(__DIR__.'/lib/discussion/subscribe.php');
 require_once($CFG->dirroot.'/lib/formslib.php');
+require_once($CFG->dirroot . '/grade/grading/lib.php');
+
 
 /**
  * A custom renderer class that extends the plugin_renderer_base and
@@ -124,7 +126,7 @@ class mod_hsuforum_renderer extends plugin_renderer_base {
      * @return string
      */
     public function render_discussionsview($forum) {
-        global $CFG, $DB, $PAGE, $SESSION;
+        global $CFG, $DB, $PAGE, $SESSION, $USER;
 
         ob_start(); // YAK! todo, fix this rubbish.
 
@@ -198,11 +200,76 @@ class mod_hsuforum_renderer extends plugin_renderer_base {
 
         // Don't allow non logged in users, or guest to try to manage subscriptions.
         if (isloggedin() && !isguestuser()) {
-            $url = new \moodle_url('/mod/hsuforum/index.php', ['id' => $course->id]);
+            $forumobject = $DB->get_record("hsuforum", ["id" => $PAGE->cm->instance]);
+
+            // Url's for different options in the discussion.
+            $manageforumsubscriptionsurl = new \moodle_url('/mod/hsuforum/index.php', ['id' => $course->id]);
+            $exporturl = new \moodle_url('/mod/hsuforum/route.php', ['contextid' => $context->id, 'action' => 'export']);
+            $viewpostersurl = new \moodle_url('/mod/hsuforum/route.php', ['contextid' => $context->id, 'action' => 'viewposters']);
+            $subscribeforumurl = new \moodle_url('/mod/hsuforum/subscribe.php', ['id' => $forum->id, 'sesskey' => sesskey()]);
+
+            // Strings for the Url's.
             $manageforumsubscriptions = get_string('manageforumsubscriptions', 'mod_hsuforum');
-            $output .= '<div class="text-right"><hr>';
-            $output .= \html_writer::link($url, $manageforumsubscriptions, array('class' => 'btn btn-link'));
-            $output .= '</div>';
+            $exportdiscussions = get_string('export', 'mod_hsuforum');
+            $viewposters = get_string('viewposters', 'mod_hsuforum');
+
+            if (!hsuforum_is_subscribed($USER->id, $forumobject)) {
+                $subscribe = get_string('subscribe', 'hsuforum');
+            } else {
+                $subscribe = get_string('unsubscribe', 'hsuforum');
+            }
+
+            // We need to verify that these outputs only appears for Snap, Boost will only display the manage forum subscriptions link.
+            if (get_config('core', 'theme') == 'snap') {
+                // Outputs for the Url's inside divs to have a correct position inside the page.
+                $output .= '<div class="text-right"><hr>';
+                $output .= '<div class="managesubscriptions-url">';
+                $output .= \html_writer::link($manageforumsubscriptionsurl, $manageforumsubscriptions, ['class' => 'btn btn-link']);
+                $output .= '</div>';
+                $output .= '<div class="exportdiscussions-url">';
+                $output .= \html_writer::link($exporturl, $exportdiscussions, ['class' => 'btn btn-link']);
+                $output .= '</div>';
+                $output .= '<div class="viewposters-url">';
+                $output .= \html_writer::link($viewpostersurl, $viewposters, ['class' => 'btn btn-link']);
+                $output .= '</div>';
+                $output .= '<div class="subscribeforum-url">';
+                $output .= \html_writer::link($subscribeforumurl, $subscribe, ['class' => 'btn btn-link']);
+                $output .= '</div>';
+                $output .= '</div>';
+            } else {
+                $output .= '<div class="text-right"><hr>';
+                $output .= '<div class="managesubscriptions-url">';
+                $output .= \html_writer::link($manageforumsubscriptionsurl, $manageforumsubscriptions, ['class' => 'btn btn-link']);
+                $output .= '</div>';
+                $output .= '</div>';
+            }
+        }
+
+        if (!empty($CFG->mod_hsuforum_grading_interface)) {
+            $gradingmanager = get_grading_manager($context, 'mod_hsuforum', 'posts');
+            $gradingcontrollerpreview = '';
+            if ($gradingmethod = $gradingmanager->get_active_method()) {
+                $controller = $gradingmanager->get_controller($gradingmethod);
+                if ($controller->is_form_defined()) {
+                    $gradingcontrollerpreview = $controller->render_preview($PAGE);
+                    if ($gradingcontrollerpreview) {
+                        $output .= '<div class="text-right">';
+                        $output .= \html_writer::link('#hsuforum_gradingcriteria', get_string('gradingmethodpreview', 'hsuforum'),
+                            ['class' => 'btn btn-link text-right', 'data-toggle' => 'collapse', 'role' => 'button', 'aria-expanded' => 'false',
+                                'aria-controls' => 'hsuforum_gradingcriteria']);
+                        $output .= '</div>';
+                        $output .= '<div class="row">
+                                    <div class="col">
+                                    <div class="collapse multi-collapse" id="hsuforum_gradingcriteria">
+                                      <div class="card card-body">
+                                      '. $gradingcontrollerpreview .'
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>';
+                    }
+                }
+            }
         }
 
         $output = ob_get_contents().$output;
@@ -1223,7 +1290,7 @@ HTML;
 
         $forum = hsuforum_get_cm_forum($cm);
         if (!empty($forum->displaywordcount)) {
-            $postcontent .= "<div class='post-word-count'>".get_string('numwords', 'moodle', count_words($post->message))."</div>";
+            $postcontent .= "<div class='post-word-count'>".get_string('numwords', 'moodle', hsuforum_word_count($post->message))."</div>";
         }
         $postcontent  = "<div class='posting'>".$postcontent."</div>";
         return $postcontent;
@@ -1682,7 +1749,7 @@ HTML;
         }
         return <<<HTML
 <div class="hsuforum-reply-wrapper$t->thresholdblocked">
-    <form method="post" role="region" aria-label="$t->legend" class="hsuforum-form $t->class" action="$actionurl" autocomplete="off">
+    <form method="post" role="form" aria-label="$t->legend" class="hsuforum-form $t->class" action="$actionurl" autocomplete="off">
         <fieldset>
             <legend>$t->legend</legend>
             $t->thresholdwarning
@@ -1852,15 +1919,43 @@ HTML;
                 'd' => $discussion->id,
                 'sesskey' => sesskey(),
             ]);
-            $commands['pin'] = html_writer::link($pinurl, $pintext, ['class' => 'disable-router']);
+            $commands['pin'] = $this->render_ax_button($pinurl, $pintext, 'post', $pinlink, $discussion->id);
         }
 
         return $commands;
     }
 
     /**
+     * Render ax button for pin/unpin.
+     * @param moodle_url $url
+     * @param string $content
+     * @param string $method
+     * @param int $pinlink
+     * @param int $discussion
+     * @return string
+     */
+    public function render_ax_button(moodle_url $url, $content, $method = 'post', $pinlink, $discussion) {
+        global $PAGE;
+
+        $PAGE->requires->js_call_amd('mod_hsuforum/accessibility', 'init', array());
+        $url = $method === 'get' ? $url->out_omit_querystring(true) : $url->out_omit_querystring();
+        $output = html_writer::start_tag('div', ['class' => 'singlebutton']);
+        $output .= html_writer::start_tag('form', ['method' => $method, 'action' => $url]);
+        $output .= html_writer::tag('input', '',['type' => 'hidden', 'name' => 'pin', 'value' => $pinlink]);
+        $output .= html_writer::tag('input', '',['type' => 'hidden', 'name' => 'd', 'value' => $discussion]);
+        $output .= html_writer::tag('input', '',['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]);
+        $output .= html_writer::start_tag('button', ['class' => 'pinbutton btn btn-default', 'aria-pressed' => 'false',
+            'type' => 'submit', 'id' => html_writer::random_id('single_button')]);
+        $output .= $content;
+        $output .= html_writer::end_tag('button');
+        $output .= html_writer::end_tag('form');
+        $output .= html_writer::end_tag('div');
+        return $output;
+    }
+
+    /**
      * Render dateform.
-     * @param discussion_dateform $dateform
+     * @param advanced_editor $advancededitor
      * @return string
      */
     public function render_advanced_editor(advanced_editor $advancededitor, $target, $targetid) {
